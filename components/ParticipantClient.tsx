@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 
 import { ParticipantJoinForm } from "@/components/ParticipantJoinForm";
@@ -50,8 +50,9 @@ export function ParticipantClient() {
   const [sessionSignature, setSessionSignature] = useState("");
   const [hasClicked, setHasClicked] = useState(false);
   const [isPicking, setIsPicking] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("Connect wallet and join to participate.");
+  const [statusMessage, setStatusMessage] = useState("Connect wallet. You will auto-join after entering your name.");
   const [lastResult, setLastResult] = useState<ParticipantResultPayload | null>(null);
+  const lastAutoJoinKeyRef = useRef("");
 
   const activeAddress = useMemo(() => {
     if (joined) {
@@ -68,6 +69,21 @@ export function ParticipantClient() {
       setUseMockWallet(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (useMockWallet || isConnected) {
+      return;
+    }
+
+    if (joined) {
+      setJoined(false);
+      setJoinedAddress("");
+      setSessionSignature("");
+      setIsEditingName(false);
+      setHasClicked(false);
+      setStatusMessage("Connect wallet. You will auto-join after entering your name.");
+    }
+  }, [isConnected, joined, useMockWallet]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -136,6 +152,31 @@ export function ParticipantClient() {
       socket.off("participant:result", onParticipantResult);
     };
   }, [hasClicked, joined]);
+
+  const autoJoinAddress = useMemo(() => {
+    return useMockWallet ? mockAddress.trim() : (address ?? "");
+  }, [address, mockAddress, useMockWallet]);
+
+  useEffect(() => {
+    if (!joined || !joinedAddress) {
+      return;
+    }
+
+    if (!autoJoinAddress) {
+      return;
+    }
+
+    if (joinedAddress.toLowerCase() === autoJoinAddress.toLowerCase()) {
+      return;
+    }
+
+    setJoined(false);
+    setJoinedAddress("");
+    setSessionSignature("");
+    setIsEditingName(false);
+    setHasClicked(false);
+    setStatusMessage("Wallet changed. Rejoining automatically...");
+  }, [autoJoinAddress, joined, joinedAddress]);
 
   async function emitWithAck(event: string, payload: unknown): Promise<SocketAck> {
     const socket = getSocket();
@@ -238,9 +279,35 @@ export function ParticipantClient() {
     }
   }
 
+  useEffect(() => {
+    if (joined || isJoining || isEditingName || !socketConnected) {
+      return;
+    }
+
+    const normalizedName = displayName.trim();
+    if (normalizedName.length < 2) {
+      return;
+    }
+
+    const hasAddress = autoJoinAddress.length > 0;
+    const canAutoJoin = useMockWallet ? ENABLE_MOCK_WALLET && hasAddress : isConnected && hasAddress;
+
+    if (!canAutoJoin) {
+      return;
+    }
+
+    const autoJoinKey = `${useMockWallet ? "mock" : "wallet"}:${autoJoinAddress.toLowerCase()}:${normalizedName.toLowerCase()}`;
+    if (lastAutoJoinKeyRef.current === autoJoinKey) {
+      return;
+    }
+
+    lastAutoJoinKeyRef.current = autoJoinKey;
+    void handleJoin();
+  }, [autoJoinAddress, displayName, handleJoin, isConnected, isEditingName, isJoining, joined, socketConnected, useMockWallet]);
+
   async function handlePick() {
     if (!joined || !joinedAddress) {
-      setStatusMessage("Join first before picking.");
+      setStatusMessage("Connect wallet and wait for auto-join before picking.");
       return;
     }
 
@@ -301,7 +368,7 @@ export function ParticipantClient() {
           <ParticipantJoinForm
             displayName={displayName}
             onDisplayNameChange={setDisplayName}
-            onJoin={handleJoin}
+            onSaveName={handleJoin}
             isJoining={isJoining}
             joined={joined}
             isEditingName={isEditingName}

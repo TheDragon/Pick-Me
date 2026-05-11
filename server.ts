@@ -5,10 +5,10 @@ import next from "next";
 import { initializeSocketServer } from "./server/socket-server";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOST ?? "0.0.0.0";
-const port = Number(process.env.PORT ?? 3000);
+const HOST = process.env.HOST ?? "0.0.0.0";
+const PORT = Number(process.env.PORT || 3000);
 
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname: HOST, port: PORT });
 const handle = app.getRequestHandler();
 
 app
@@ -20,8 +20,8 @@ app
 
     initializeSocketServer(httpServer);
 
-    httpServer.listen(port, hostname, () => {
-      console.log(`> PickMe server ready at http://${hostname}:${port}`);
+    httpServer.listen(PORT, HOST, () => {
+      console.log(`> PickMe server ready at http://${HOST}:${PORT}`);
     });
   })
   .catch((error: unknown) => {

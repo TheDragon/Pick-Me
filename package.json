@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsx watch server.ts",
+    "dev": "tsx server.ts",
     "build": "next build",
-    "start": "cross-env NODE_ENV=production tsx server.ts",
+    "postbuild": "tsc -p tsconfig.server.json",
+    "start": "node dist/server.js",
     "lint": "next lint"
   },
   "dependencies": {

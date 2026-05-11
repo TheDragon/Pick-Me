@@ -2,7 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import { getAddress, isAddress, verifyMessage, type Address, type Hex } from "viem";
 
-import { ENABLE_MOCK_WALLET, MAX_SELECTED, SIGN_IN_MESSAGE } from "../lib/constants";
+import { ENABLE_MOCK_WALLET, MAX_SELECTED, PICK_COUNTDOWN_SECONDS, SIGN_IN_MESSAGE } from "../lib/constants";
 import type {
   ParticipantJoinPayload,
   ParticipantPickPayload,
@@ -22,6 +22,7 @@ type Participant = {
 const participants = new Map<string, Participant>();
 let selected: SelectedParticipant[] = [];
 let isPickOpen = false;
+let pickOpensAt: number | null = null;
 
 function normalizeAddress(input: string): Address | null {
   const trimmed = input.trim();
@@ -39,6 +40,7 @@ function normalizeAddress(input: string): Address | null {
 function getState(): StateUpdatePayload {
   return {
     isPickOpen,
+    pickOpensAt,
     participantsCount: participants.size,
     selected,
   };
@@ -59,6 +61,7 @@ function success(ack: ((payload: SocketAck) => void) | undefined): void {
 function resetRound(): void {
   selected = [];
   isPickOpen = false;
+  pickOpensAt = null;
 
   for (const participant of participants.values()) {
     participant.hasPicked = false;
@@ -170,6 +173,16 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
         return;
       }
 
+      if (pickOpensAt && Date.now() < pickOpensAt) {
+        const remainingSeconds = Math.max(1, Math.ceil((pickOpensAt - Date.now()) / 1000));
+        success(ack);
+        socket.emit("participant:result", {
+          selected: false,
+          message: `Get ready... ${remainingSeconds}`,
+        });
+        return;
+      }
+
       if (participant.hasPicked) {
         success(ack);
         socket.emit("participant:result", {
@@ -199,6 +212,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
 
         if (selected.length >= MAX_SELECTED) {
           isPickOpen = false;
+          pickOpensAt = null;
           broadcastState(io);
         }
         return;
@@ -223,6 +237,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
 
       selected = [];
       isPickOpen = true;
+      pickOpensAt = Date.now() + PICK_COUNTDOWN_SECONDS * 1000;
       success(ack);
       broadcastState(io);
     });

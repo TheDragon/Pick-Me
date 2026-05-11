@@ -7,6 +7,7 @@ export type SelectedParticipant = {
 
 export type StateUpdatePayload = {
   isPickOpen: boolean;
+  pickOpensAt: number | null;
   participantsCount: number;
   selected: SelectedParticipant[];
 };

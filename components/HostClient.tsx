@@ -9,6 +9,7 @@ import type { SocketAck, StateUpdatePayload } from "@/lib/types";
 
 const initialState: StateUpdatePayload = {
   isPickOpen: false,
+  pickOpensAt: null,
   participantsCount: 0,
   selected: [],
 };

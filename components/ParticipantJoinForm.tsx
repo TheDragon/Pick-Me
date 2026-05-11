@@ -1,10 +1,12 @@
 type ParticipantJoinFormProps = {
   displayName: string;
   onDisplayNameChange: (value: string) => void;
+  onJoin: () => void;
   onSaveName: () => void;
   isJoining: boolean;
   joined: boolean;
   isEditingName: boolean;
+  canJoin: boolean;
   onStartEditingName: () => void;
   onCancelEditingName: () => void;
 };
@@ -12,10 +14,12 @@ type ParticipantJoinFormProps = {
 export function ParticipantJoinForm({
   displayName,
   onDisplayNameChange,
+  onJoin,
   onSaveName,
   isJoining,
   joined,
   isEditingName,
+  canJoin,
   onStartEditingName,
   onCancelEditingName,
 }: ParticipantJoinFormProps) {
@@ -39,9 +43,17 @@ export function ParticipantJoinForm({
         />
       </div>
       {!joined ? (
-        <p className="text-xs text-slate-400">
-          Auto-join starts when wallet is connected and name has at least 2 characters.
-        </p>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={onJoin}
+            disabled={isJoining || !canJoin}
+            className="w-full rounded-xl border border-accent bg-accent/10 px-4 py-3 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-400"
+          >
+            {isJoining ? "Signing In..." : "Sign In & Join"}
+          </button>
+          <p className="text-xs text-slate-400">Signing in joins you immediately for the active session.</p>
+        </div>
       ) : isEditingName ? (
         <div className="grid gap-2 sm:grid-cols-2">
           <button

@@ -638,7 +638,7 @@ export function ParticipantClient() {
                     value={profileModel.displayName}
                     onChange={(event) => setProfileModel((prev) => ({ ...prev, displayName: event.target.value }))}
                     maxLength={40}
-                    placeholder="e.g., Alice"
+                    placeholder="e.g., Sonam"
                     className="w-full rounded-xl border border-border bg-slate-900 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-accent"
                   />
                   <div className="grid gap-2 sm:grid-cols-2">

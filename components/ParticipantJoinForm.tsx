@@ -37,7 +37,7 @@ export function ParticipantJoinForm({
           value={displayName}
           onChange={(event) => onDisplayNameChange(event.target.value)}
           maxLength={40}
-          placeholder="e.g., Alice"
+          placeholder="e.g., Sonam"
           disabled={isInputDisabled}
           className="w-full rounded-xl border border-border bg-slate-900 px-4 py-3 text-sm outline-none transition focus:border-accent"
         />

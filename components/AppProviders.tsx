@@ -29,7 +29,7 @@ export function AppProviders({ children }: AppProvidersProps) {
     }
 
     window.__pickmeCreditLogged = true;
-    console.info("%cMADE BY BHUTAN --- P.A.N.D.A", "color: #7dd3fc; font-weight: 800; letter-spacing: 0.08em;");
+    console.info("%cMADE BY BHUTAN (GCIT) --- P.A.N.D.A", "color: #7dd3fc; font-weight: 800; letter-spacing: 0.08em;");
   }, []);
 
   return (
